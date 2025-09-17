@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model HalalPlace {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String   // restaurant, market, prayer_room
+  latitude    Float
+  longitude   Float
+  address     String
+  phone       String?
+  rating      Float?
+  halalLevel  String   // certified, reliable, unknown
+  description String?
+  openingHours String?
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("halal_places")
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  category  String   // food, prayer_room, life_info, other
+  language  String   // ko, en, ar
+  authorName String
+  authorEmail String?
+  imageUrl  String?
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments Comment[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id          Int      @id @default(autoincrement())
+  content     String
+  authorName  String
+  authorEmail String?
+  postId      Int
+  createdAt   DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model ScanHistory {
+  id             Int      @id @default(autoincrement())
+  productName    String?
+  imageUrl       String?
+  isHalal        Boolean
+  confidence     Int      // 0-100
+  analysisResult String   // JSON string with detailed analysis
+  reason         String?
+  concernedIngredients String? // JSON array of problematic ingredients
+  recommendation String?
+  language       String   @default("ko")
+  createdAt      DateTime @default(now())
+
+  @@map("scan_history")
+}

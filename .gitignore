@@ -1,0 +1,15 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+# Next.js build outputs
+.next/
+out/
+
+# Production build
+build/
+dist/
+
+# Development database
+dev.db
+*.db
