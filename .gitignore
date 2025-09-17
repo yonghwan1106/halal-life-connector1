@@ -13,3 +13,5 @@ dist/
 # Development database
 dev.db
 *.db
+
+.vercel
