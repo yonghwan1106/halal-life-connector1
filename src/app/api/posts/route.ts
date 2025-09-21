@@ -234,6 +234,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // If database is not available, return error
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Database not available. Post creation is not supported in demo mode.' },
+        { status: 503 }
+      )
+    }
+
     const post = await prisma.post.create({
       data: {
         title,

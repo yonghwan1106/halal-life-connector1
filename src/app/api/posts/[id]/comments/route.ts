@@ -19,6 +19,14 @@ export async function POST(
       )
     }
 
+    // If database is not available, return error
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Database not available. Comments are not supported in demo mode.' },
+        { status: 503 }
+      )
+    }
+
     // Check if post exists
     const post = await prisma.post.findUnique({
       where: { id: postId }
