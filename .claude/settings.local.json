@@ -17,7 +17,8 @@
       "Bash(vercel:*)",
       "Bash(tasklist)",
       "Bash(taskkill:*)",
-      "WebFetch(domain:halal-life-connector-13o6memhu-yongparks-projects.vercel.app)"
+      "WebFetch(domain:halal-life-connector-13o6memhu-yongparks-projects.vercel.app)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
