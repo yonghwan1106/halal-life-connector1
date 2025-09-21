@@ -103,7 +103,9 @@ If you cannot read the ingredients list or product information from the image, s
     console.log('Calling Claude API...')
 
     // Call Claude API
-    const message = await anthropic.messages.create({
+    let message
+    try {
+      message = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 1024,
       messages: [
@@ -118,14 +120,18 @@ If you cannot read the ingredients list or product information from the image, s
               type: "image",
               source: {
                 type: "base64",
-                media_type: "image/jpeg",
+                media_type: image.startsWith('data:image/png') ? "image/png" : "image/jpeg",
                 data: image.replace(/^data:image\/[a-z]+;base64,/, '')
               }
             }
           ]
         }
       ]
-    })
+      })
+    } catch (apiError) {
+      console.error('Anthropic API error:', apiError)
+      throw new Error(`Claude API failed: ${apiError instanceof Error ? apiError.message : 'Unknown error'}`)
+    }
 
     console.log('Claude API response received')
     const responseText = message.content[0].type === 'text' ? message.content[0].text : ''
