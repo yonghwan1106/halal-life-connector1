@@ -11,6 +11,7 @@ interface CommunityBoardProps {
 export default function CommunityBoard({ language = 'ko' }: CommunityBoardProps) {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState({
     category: 'all',
     language: 'all'
@@ -50,6 +51,7 @@ export default function CommunityBoard({ language = 'ko' }: CommunityBoardProps)
 
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     try {
       const response = await fetch('/api/posts', {
         method: 'POST',
@@ -68,9 +70,14 @@ export default function CommunityBoard({ language = 'ko' }: CommunityBoardProps)
         })
         setShowNewPostForm(false)
         fetchPosts()
+      } else if (response.status === 503) {
+        setError('게시글 작성은 현재 데모 모드에서 지원되지 않습니다. 조회만 가능합니다.')
+      } else {
+        setError('게시글 작성 중 오류가 발생했습니다.')
       }
     } catch (error) {
       console.error('Error creating post:', error)
+      setError('네트워크 오류가 발생했습니다.')
     }
   }
 
@@ -78,6 +85,7 @@ export default function CommunityBoard({ language = 'ko' }: CommunityBoardProps)
     const comment = newComment[postId]
     if (!comment?.content || !comment?.authorName) return
 
+    setError(null)
     try {
       const response = await fetch(`/api/posts/${postId}/comments`, {
         method: 'POST',
@@ -88,9 +96,14 @@ export default function CommunityBoard({ language = 'ko' }: CommunityBoardProps)
       if (response.ok) {
         setNewComment(prev => ({ ...prev, [postId]: { content: '', authorName: '' } }))
         fetchPosts()
+      } else if (response.status === 503) {
+        setError('댓글 작성은 현재 데모 모드에서 지원되지 않습니다.')
+      } else {
+        setError('댓글 작성 중 오류가 발생했습니다.')
       }
     } catch (error) {
       console.error('Error creating comment:', error)
+      setError('네트워크 오류가 발생했습니다.')
     }
   }
 
@@ -254,6 +267,11 @@ export default function CommunityBoard({ language = 'ko' }: CommunityBoardProps)
       {/* New Post Form */}
       {showNewPostForm && (
         <div className="bg-white rounded-lg shadow-lg p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-md">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmitPost} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t.title}</label>
