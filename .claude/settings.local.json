@@ -16,7 +16,8 @@
       "Bash(npm run build:*)",
       "Bash(vercel:*)",
       "Bash(tasklist)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "WebFetch(domain:halal-life-connector-13o6memhu-yongparks-projects.vercel.app)"
     ],
     "deny": [],
     "ask": []
