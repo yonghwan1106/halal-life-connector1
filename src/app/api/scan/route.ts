@@ -153,7 +153,8 @@ If you cannot read the ingredients list or product information from the image, s
 
     // Save scan history to database (optional - won't fail if DB is unavailable)
     try {
-      await prisma.scanHistory.create({
+      if (prisma) {
+        await prisma.scanHistory.create({
         data: {
           productName: analysisResult.product_name || null,
           imageUrl: null, // In a real app, you'd save the image to storage
@@ -165,8 +166,9 @@ If you cannot read the ingredients list or product information from the image, s
           recommendation: analysisResult.recommendation,
           language
         }
-      })
-      console.log('Scan history saved successfully')
+        })
+        console.log('Scan history saved successfully')
+      }
     } catch (dbError) {
       console.error('Failed to save scan history:', dbError)
       // Continue execution - don't fail the API call if DB save fails
