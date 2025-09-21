@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { HalalPlace } from '@/types'
 
 declare global {
@@ -27,22 +27,44 @@ export default function KakaoMap({
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const markers = useRef<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const initializeMap = () => {
-      if (!window.kakao || !mapContainer.current) return
+      console.log('Initializing Kakao Map...')
 
-      window.kakao.maps.load(() => {
-        const center = userLocation
-          ? new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng)
-          : new window.kakao.maps.LatLng(37.5665, 126.9780) // 서울시청
+      if (!window.kakao) {
+        console.error('Kakao Maps SDK not loaded')
+        setError('카카오맵 SDK가 로드되지 않았습니다.')
+        setIsLoading(false)
+        return
+      }
 
-        const options = {
-          center,
-          level: userLocation ? 5 : 8
-        }
+      if (!mapContainer.current) {
+        console.error('Map container not found')
+        setError('맵 컨테이너를 찾을 수 없습니다.')
+        setIsLoading(false)
+        return
+      }
 
-        map.current = new window.kakao.maps.Map(mapContainer.current, options)
+      try {
+        window.kakao.maps.load(() => {
+          console.log('Kakao Maps loaded successfully')
+          const center = userLocation
+            ? new window.kakao.maps.LatLng(userLocation.lat, userLocation.lng)
+            : new window.kakao.maps.LatLng(37.5665, 126.9780) // 서울시청
+
+          const options = {
+            center,
+            level: userLocation ? 5 : 8
+          }
+
+          map.current = new window.kakao.maps.Map(mapContainer.current, options)
+          console.log('Map created successfully')
+
+          setIsLoading(false)
+          setError(null)
 
         // Clear existing markers
         markers.current.forEach(marker => marker.setMap(null))
@@ -166,20 +188,73 @@ export default function KakaoMap({
             selectedMarker._infoWindow.open(map.current, selectedMarker)
           }
         }
-      })
+        })
+      } catch (error) {
+        console.error('Error initializing map:', error)
+        setError('맵을 초기화하는 중 오류가 발생했습니다.')
+        setIsLoading(false)
+      }
     }
 
     // Load Kakao Maps script
     if (!window.kakao) {
+      console.log('Loading Kakao Maps SDK...')
       const script = document.createElement('script')
       script.async = true
       script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false`
-      script.onload = initializeMap
+      script.onload = () => {
+        console.log('Kakao Maps SDK loaded')
+        initializeMap()
+      }
+      script.onerror = () => {
+        console.error('Failed to load Kakao Maps SDK')
+        setError('카카오맵 SDK를 로드할 수 없습니다.')
+        setIsLoading(false)
+      }
       document.head.appendChild(script)
     } else {
       initializeMap()
     }
   }, [places, userLocation, selectedPlace, onPlaceSelect])
+
+  if (isLoading) {
+    return (
+      <div
+        style={{ width: '100%', height }}
+        className="rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center"
+      >
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-islamic-green mx-auto mb-2"></div>
+          <p className="text-sm text-gray-600">지도를 로드하는 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div
+        style={{ width: '100%', height }}
+        className="rounded-lg overflow-hidden bg-red-50 flex items-center justify-center"
+      >
+        <div className="text-center p-4">
+          <div className="text-red-500 mb-2">⚠️</div>
+          <p className="text-sm text-red-600">{error}</p>
+          <button
+            onClick={() => {
+              setError(null)
+              setIsLoading(true)
+              // Retry loading
+              window.location.reload()
+            }}
+            className="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
