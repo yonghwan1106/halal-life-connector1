@@ -49,15 +49,26 @@ export default function HalalScanner({ language = 'ko' }: HalalScannerProps) {
       })
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        if (response.status === 503) {
+          throw new Error(errorData.error || 'Service unavailable')
+        }
         throw new Error('Analysis failed')
       }
 
       const data = await response.json()
       setResult(data)
     } catch (err) {
-      setError(language === 'ko'
-        ? '분석 중 오류가 발생했습니다. 다시 시도해주세요.'
-        : 'An error occurred during analysis. Please try again.')
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      if (errorMessage.includes('데모 모드') || errorMessage.includes('Service unavailable')) {
+        setError(language === 'ko'
+          ? 'AI 분석 서비스가 현재 데모 모드에서 지원되지 않습니다.'
+          : 'AI analysis service is not supported in demo mode.')
+      } else {
+        setError(language === 'ko'
+          ? '분석 중 오류가 발생했습니다. 다시 시도해주세요.'
+          : 'An error occurred during analysis. Please try again.')
+      }
     } finally {
       setIsAnalyzing(false)
     }

@@ -14,8 +14,11 @@ export async function POST(request: NextRequest) {
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('ANTHROPIC_API_KEY is not set')
       return NextResponse.json(
-        { error: 'API configuration error' },
-        { status: 500 }
+        {
+          error: 'AI 분석 서비스가 현재 데모 모드에서 지원되지 않습니다.',
+          details: 'API configuration missing'
+        },
+        { status: 503 }
       )
     }
 
