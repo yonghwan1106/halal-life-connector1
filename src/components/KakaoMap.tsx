@@ -74,24 +74,9 @@ export default function KakaoMap({
         places.forEach((place) => {
           const position = new window.kakao.maps.LatLng(place.latitude, place.longitude)
 
-          // Different marker colors based on category
-          let markerImageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png'
-          if (place.category === 'restaurant') {
-            markerImageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png'
-          } else if (place.category === 'market') {
-            markerImageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_blue.png'
-          } else if (place.category === 'prayer_room') {
-            markerImageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_green.png'
-          }
-
-          const markerImage = new window.kakao.maps.MarkerImage(
-            markerImageSrc,
-            new window.kakao.maps.Size(22, 28)
-          )
-
+          // Use default marker (no custom image to avoid 404 errors)
           const marker = new window.kakao.maps.Marker({
-            position,
-            image: markerImage
+            position
           })
 
           marker.setMap(map.current)
