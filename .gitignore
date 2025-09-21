@@ -15,3 +15,4 @@ dev.db
 *.db
 
 .vercel
+.env*.local

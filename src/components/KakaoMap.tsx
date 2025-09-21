@@ -274,22 +274,95 @@ export default function KakaoMap({
     return (
       <div
         style={{ width: '100%', height }}
-        className="rounded-lg overflow-hidden bg-red-50 flex items-center justify-center"
+        className="rounded-lg overflow-hidden bg-gradient-to-br from-islamic-green/10 to-islamic-green/20 flex flex-col"
       >
-        <div className="text-center p-4">
-          <div className="text-red-500 mb-2">⚠️</div>
-          <p className="text-sm text-red-600">{error}</p>
-          <button
-            onClick={() => {
-              setError(null)
-              setIsLoading(true)
-              // Retry loading
-              window.location.reload()
-            }}
-            className="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-          >
-            다시 시도
-          </button>
+        <div className="p-4 bg-islamic-green text-white">
+          <h3 className="font-semibold">🗺️ 서울 할랄 시설 위치</h3>
+          <p className="text-sm opacity-90">지도 로딩 중 문제가 발생했지만, 시설 정보는 확인하실 수 있습니다</p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="grid gap-3">
+            {places.map((place) => (
+              <div
+                key={place.id}
+                className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer border"
+                onClick={() => onPlaceSelect && onPlaceSelect(place)}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="text-2xl">
+                    {place.category === 'restaurant' && '🍽️'}
+                    {place.category === 'market' && '🛒'}
+                    {place.category === 'prayer_room' && '🕌'}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 truncate">{place.name}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{place.address}</p>
+
+                    <div className="flex items-center space-x-2 mt-2">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        place.halalLevel === 'certified' ? 'bg-green-100 text-green-700' :
+                        place.halalLevel === 'reliable' ? 'bg-blue-100 text-blue-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {place.halalLevel === 'certified' ? '인증됨' :
+                         place.halalLevel === 'reliable' ? '신뢰할만함' : '미확인'}
+                      </span>
+
+                      {place.rating && (
+                        <div className="flex items-center space-x-1">
+                          <span className="text-yellow-400">⭐</span>
+                          <span className="text-xs text-gray-600">{place.rating}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {place.phone && (
+                      <div className="flex items-center space-x-1 mt-2">
+                        <span className="text-islamic-green">📞</span>
+                        <span className="text-xs text-gray-600">{place.phone}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const url = `https://map.kakao.com/link/search/${encodeURIComponent(place.name + ' ' + place.address)}`
+                      window.open(url, '_blank')
+                    }}
+                    className="text-islamic-green hover:text-islamic-green/80 p-1"
+                    title="카카오맵에서 보기"
+                  >
+                    🗺️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {places.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <p>표시할 시설이 없습니다.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="p-3 bg-gray-50 border-t">
+          <div className="flex items-center justify-between text-xs text-gray-600">
+            <span>총 {places.length}개 시설</span>
+            <button
+              onClick={() => {
+                setError(null)
+                setIsLoading(true)
+                window.location.reload()
+              }}
+              className="px-2 py-1 bg-islamic-green text-white rounded hover:bg-islamic-green/90"
+            >
+              지도 다시 로드
+            </button>
+          </div>
         </div>
       </div>
     )
