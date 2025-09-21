@@ -14,7 +14,9 @@
       "Bash(vercel env:*)",
       "Bash(vercel link:*)",
       "Bash(npm run build:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(tasklist)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []
