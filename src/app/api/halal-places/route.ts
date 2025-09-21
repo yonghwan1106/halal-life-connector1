@@ -24,24 +24,35 @@ export async function GET(request: NextRequest) {
 
     // Try to fetch from database, fallback to mock data if DB is unavailable
     let places
-    try {
-      places = await prisma.halalPlace.findMany({
-        where: whereClause,
-        orderBy: [
-          { halalLevel: 'asc' }, // certified first
-          { rating: 'desc' },
-          { name: 'asc' }
-        ]
-      })
-      console.log('Fetched places from database:', places.length)
-    } catch (dbError) {
-      console.error('Database unavailable, using mock data:', dbError)
+
+    if (!prisma) {
+      console.log('Database not available, using mock data')
       // Return mock data for Seoul halal places when database is unavailable
       places = getMockHalalPlaces().filter(place => {
         if (category && category !== 'all' && place.category !== category) return false
         if (halalLevel && halalLevel !== 'all' && place.halalLevel !== halalLevel) return false
         return true
       })
+    } else {
+      try {
+        places = await prisma.halalPlace.findMany({
+          where: whereClause,
+          orderBy: [
+            { halalLevel: 'asc' }, // certified first
+            { rating: 'desc' },
+            { name: 'asc' }
+          ]
+        })
+        console.log('Fetched places from database:', places.length)
+      } catch (dbError) {
+        console.error('Database error, using mock data:', dbError)
+        // Return mock data for Seoul halal places when database is unavailable
+        places = getMockHalalPlaces().filter(place => {
+          if (category && category !== 'all' && place.category !== category) return false
+          if (halalLevel && halalLevel !== 'all' && place.halalLevel !== halalLevel) return false
+          return true
+        })
+      }
     }
 
     // If location and radius provided, filter by distance

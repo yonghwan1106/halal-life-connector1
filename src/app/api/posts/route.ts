@@ -23,27 +23,9 @@ export async function GET(request: NextRequest) {
 
     // Try to fetch from database, fallback to mock data if DB is unavailable
     let posts, total
-    try {
-      [posts, total] = await Promise.all([
-        prisma.post.findMany({
-          where: whereClause,
-          include: {
-            comments: {
-              orderBy: { createdAt: 'desc' },
-              take: 3
-            }
-          },
-          orderBy: [
-            { createdAt: 'desc' }
-          ],
-          skip: (page - 1) * limit,
-          take: limit
-        }),
-        prisma.post.count({ where: whereClause })
-      ])
-      console.log('Fetched posts from database:', posts.length)
-    } catch (dbError) {
-      console.error('Database unavailable, using mock data:', dbError)
+
+    if (!prisma) {
+      console.log('Database not available, using mock data')
       // Return mock community posts when database is unavailable
       const mockPosts = getMockPosts().filter(post => {
         if (category && category !== 'all' && post.category !== category) return false
@@ -54,6 +36,39 @@ export async function GET(request: NextRequest) {
       const startIndex = (page - 1) * limit
       posts = mockPosts.slice(startIndex, startIndex + limit)
       total = mockPosts.length
+    } else {
+      try {
+        [posts, total] = await Promise.all([
+          prisma.post.findMany({
+            where: whereClause,
+            include: {
+              comments: {
+                orderBy: { createdAt: 'desc' },
+                take: 3
+              }
+            },
+            orderBy: [
+              { createdAt: 'desc' }
+            ],
+            skip: (page - 1) * limit,
+            take: limit
+          }),
+          prisma.post.count({ where: whereClause })
+        ])
+        console.log('Fetched posts from database:', posts.length)
+      } catch (dbError) {
+        console.error('Database error, using mock data:', dbError)
+        // Return mock community posts when database is unavailable
+        const mockPosts = getMockPosts().filter(post => {
+          if (category && category !== 'all' && post.category !== category) return false
+          if (language && language !== 'all' && post.language !== language) return false
+          return true
+        })
+
+        const startIndex = (page - 1) * limit
+        posts = mockPosts.slice(startIndex, startIndex + limit)
+        total = mockPosts.length
+      }
     }
 
     return NextResponse.json({
