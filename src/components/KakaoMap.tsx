@@ -31,6 +31,17 @@ export default function KakaoMap({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('KakaoMap useEffect triggered')
+    console.log('API Key:', process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY ? 'Available' : 'Missing')
+
+    // Check if API key is available
+    if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY) {
+      console.error('Kakao Maps API key is missing')
+      setError('카카오맵 API 키가 설정되지 않았습니다.')
+      setIsLoading(false)
+      return
+    }
+
     const initializeMap = () => {
       console.log('Initializing Kakao Map...')
 
@@ -197,24 +208,52 @@ export default function KakaoMap({
     }
 
     // Load Kakao Maps script
-    if (!window.kakao) {
-      console.log('Loading Kakao Maps SDK...')
-      const script = document.createElement('script')
-      script.async = true
-      script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false`
-      script.onload = () => {
-        console.log('Kakao Maps SDK loaded')
-        initializeMap()
-      }
-      script.onerror = () => {
-        console.error('Failed to load Kakao Maps SDK')
-        setError('카카오맵 SDK를 로드할 수 없습니다.')
-        setIsLoading(false)
-      }
-      document.head.appendChild(script)
-    } else {
-      initializeMap()
+    const loadKakaoMapsScript = () => {
+      return new Promise<void>((resolve, reject) => {
+        // Check if script is already loaded
+        if (window.kakao) {
+          console.log('Kakao Maps SDK already loaded')
+          resolve()
+          return
+        }
+
+        // Check if script is already being loaded
+        const existingScript = document.querySelector('script[src*="dapi.kakao.com"]')
+        if (existingScript) {
+          console.log('Kakao Maps SDK already loading, waiting...')
+          existingScript.addEventListener('load', () => resolve())
+          existingScript.addEventListener('error', () => reject(new Error('Script load failed')))
+          return
+        }
+
+        console.log('Loading Kakao Maps SDK...')
+        const script = document.createElement('script')
+        script.async = true
+        script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false`
+
+        script.onload = () => {
+          console.log('Kakao Maps SDK loaded successfully')
+          resolve()
+        }
+
+        script.onerror = () => {
+          console.error('Failed to load Kakao Maps SDK')
+          reject(new Error('Failed to load Kakao Maps SDK'))
+        }
+
+        document.head.appendChild(script)
+      })
     }
+
+    loadKakaoMapsScript()
+      .then(() => {
+        initializeMap()
+      })
+      .catch((error) => {
+        console.error('Error loading Kakao Maps:', error)
+        setError('카카오맵 SDK를 로드할 수 없습니다. 네트워크 연결을 확인해주세요.')
+        setIsLoading(false)
+      })
   }, [places, userLocation, selectedPlace, onPlaceSelect])
 
   if (isLoading) {
